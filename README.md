@@ -1,2 +1,0 @@
-# Guppycoin
-koin virtual
