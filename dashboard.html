@@ -347,7 +347,7 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, query, where, getDocs, increment, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, getDocs, increment, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCObu2ErcXlHD0SKJ3BU_Iiw3Dm4hI2FV8",
@@ -368,18 +368,63 @@ let userData = null;
 
 // Cek login, kalau tidak login → balik ke index
 document.getElementById("page-loading").classList.add("show");
+
+// Timeout 8 detik - kalau masih loading paksa tampil dashboard
+const loadTimeout = setTimeout(()=>{
+  document.getElementById("page-loading").classList.remove("show");
+  if(!userData && currentUser){
+    userData = {
+      name: currentUser.displayName || "Miner",
+      email: currentUser.email,
+      points: 0, totalMined: 0, totalWithdraw: 0,
+      lastMined: null, referralCode: "OX"+currentUser.uid.substring(0,6).toUpperCase(),
+      referralCount: 0, referralBonus: 0
+    };
+    renderAll();
+  }
+}, 8000);
+
 onAuthStateChanged(auth, async(user)=>{
   if(!user){
+    clearTimeout(loadTimeout);
     window.location.href = "index.html";
     return;
   }
   currentUser = user;
-  const ref = doc(db, "users", user.uid);
-  const snap = await getDoc(ref);
-  if(snap.exists()){
-    userData = snap.data();
+  try{
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
+    if(snap.exists()){
+      userData = snap.data();
+    } else {
+      // Buat data user baru kalau belum ada
+      const newUser = {
+        uid: user.uid,
+        name: user.displayName || "Miner",
+        email: user.email,
+        points: 0, totalMined: 0, totalWithdraw: 0,
+        lastMined: null,
+        referralCode: "OX"+user.uid.substring(0,6).toUpperCase(),
+        referredBy: "", referralCount: 0, referralBonus: 0,
+        joinedAt: serverTimestamp()
+      };
+      await setDoc(ref, newUser);
+      userData = newUser;
+    }
+    renderAll();
+  } catch(e){
+    console.error("Firestore error:", e);
+    // Tampilkan dashboard dengan data minimal walau firestore error
+    userData = {
+      name: user.displayName || "Miner",
+      email: user.email,
+      points: 0, totalMined: 0, totalWithdraw: 0,
+      lastMined: null, referralCode: "OX"+user.uid.substring(0,6).toUpperCase(),
+      referralCount: 0, referralBonus: 0
+    };
     renderAll();
   }
+  clearTimeout(loadTimeout);
   document.getElementById("page-loading").classList.remove("show");
 });
 
