@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>OXIN - Login</title>
+<!-- Telegram Mini App SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0c0f;--card:#111418;--card2:#161b22;--orange:#f97316;--og:rgba(249,115,22,0.18);--text:#f1f5f9;--muted:#64748b;--dim:#94a3b8;--border:rgba(249,115,22,0.15);--b2:rgba(255,255,255,0.06);--red:#ef4444}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at 50% 0%,rgba(249,115,22,0.08),transparent 60%)}
+#main-card{display:none;width:100%;max-width:420px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:36px 24px;box-shadow:0 0 60px rgba(249,115,22,0.08)}
+.logo{text-align:center;margin-bottom:32px}
+.logo-ring{width:80px;height:80px;margin:0 auto 16px;background:var(--og);border:2px solid var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--og)}50%{box-shadow:0 0 20px 8px var(--og)}}
+.logo h1{font-family:'Orbitron',sans-serif;font-size:1.6rem;color:var(--orange);letter-spacing:4px}
+.logo p{color:var(--muted);font-size:.85rem;margin-top:6px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card2);border-radius:12px;padding:4px;margin-bottom:28px;gap:4px}
+.tab{padding:11px;border:none;background:transparent;color:var(--muted);font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:1px;border-radius:9px;cursor:pointer;transition:all .25s}
+.tab.active{background:var(--orange);color:#fff}
+.form{display:none;flex-direction:column;gap:16px}
+.form.active{display:flex}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:.78rem;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.field input{padding:13px 16px;background:var(--card2);border:1.5px solid var(--b2);border-radius:12px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;transition:border .2s}
+.field input:focus{border-color:var(--orange)}
+.field input::placeholder{color:var(--muted)}
+.btn-main{padding:15px;background:var(--orange);color:#fff;border:none;border-radius:13px;font-family:'Orbitron',sans-serif;font-size:.82rem;letter-spacing:2px;cursor:pointer;font-weight:700;width:100%;transition:all .2s}
+.btn-main:disabled{opacity:.6;cursor:not-allowed}
+.divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.8rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--b2)}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;background:var(--card2);border:1.5px solid var(--b2);color:var(--text);border-radius:13px;font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;width:100%;transition:border .2s}
+.btn-google:hover{border-color:var(--orange)}
+.err{color:var(--red);font-size:.85rem;text-align:center;min-height:18px;font-weight:600;margin-top:4px}
+.full-loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.full-loading.hide{display:none}
+.spinner{width:55px;height:55px;border:3px solid var(--b2);border-top-color:var(--orange);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.full-loading p{font-family:'Orbitron',sans-serif;font-size:.8rem;color:var(--orange);letter-spacing:2px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,12,15,.85);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.overlay.show{display:flex}
+.overlay .spinner{width:50px;height:50px}
+.overlay p{font-family:'Orbitron',sans-serif;font-size:.8rem;color:var(--orange);letter-spacing:2px}
+</style>
+</head>
+<body>
+
+<div class="full-loading" id="full-loading">
+  <div class="spinner"></div>
+  <p>MEMUAT...</p>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <p>MEMPROSES...</p>
+</div>
+
+<div id="main-card">
+<div class="card">
+  <div class="logo">
+    <div class="logo-ring">⛏</div>
+    <h1>OXIN CHAIN</h1>
+    <p>Virtual Crypto Mining Platform</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-login" onclick="switchTab('login')">MASUK</button>
+    <button class="tab" id="tab-register" onclick="switchTab('register')">DAFTAR</button>
+  </div>
+
+  <div class="form active" id="form-login">
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="email@kamu.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn-main" onclick="doLogin()">MASUK</button>
+    <div class="divider">atau</div>
+    <button class="btn-google" onclick="doGoogleLogin()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Masuk dengan Google
+    </button>
+  </div>
+
+  <div class="form" id="form-register">
+    <div class="field"><label>Nama Lengkap</label><input type="text" id="reg-name" placeholder="Nama kamu"/></div>
+    <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="email@kamu.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="Min. 6 karakter"/></div>
+    <div class="field"><label>Kode Referral (Opsional)</label><input type="text" id="reg-referral" placeholder="Kode referral teman"/></div>
+    <button class="btn-main" onclick="doRegister()">DAFTAR SEKARANG</button>
+    <div class="divider">atau</div>
+    <button class="btn-google" onclick="doGoogleLogin()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Daftar dengan Google
+    </button>
+  </div>
+
+  <p class="err" id="err-msg"></p>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAK5HpeH_Zit7SxI8uBhA49iZLAk2EuDZk",
+  authDomain: "calude-3d67f.firebaseapp.com",
+  projectId: "calude-3d67f",
+  storageBucket: "calude-3d67f.firebasestorage.app",
+  messagingSenderId: "1079536588424",
+  appId: "1:1079536588424:web:e3195aae79678476df713d",
+  measurementId: "G-EYHJVR46BD"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const gProvider = new GoogleAuthProvider();
+gProvider.setCustomParameters({ prompt: 'select_account' });
+
+let authChecked = false;
+
+function showOverlay(){ document.getElementById("overlay").classList.add("show"); }
+function hideOverlay(){ document.getElementById("overlay").classList.remove("show"); }
+function showErr(msg){ document.getElementById("err-msg").textContent = msg; hideOverlay(); }
+function clearErr(){ document.getElementById("err-msg").textContent = ""; }
+
+function showLoginPage(){
+  document.getElementById("full-loading").classList.add("hide");
+  document.getElementById("main-card").style.display = "block";
+}
+
+function goToDashboard(){
+  window.location.href = "dashboard.html";
+}
+
+function genRefCode(uid){ return "OX" + uid.substring(0,6).toUpperCase(); }
+
+async function saveUserToDB(user, refCode=""){
+  try{
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      await setDoc(ref, {
+        uid: user.uid,
+        name: user.displayName || "Miner",
+        email: user.email,
+        points: 0, totalMined: 0, totalWithdraw: 0,
+        lastMined: null,
+        referralCode: genRefCode(user.uid),
+        referredBy: refCode,
+        referralCount: 0, referralBonus: 0,
+        joinedAt: serverTimestamp()
+      });
+      if(refCode){
+        const q = query(collection(db,"users"), where("referralCode","==",refCode));
+        const qs = await getDocs(q);
+        if(!qs.empty) await updateDoc(qs.docs[0].ref,{points:increment(50),totalMined:increment(50),referralCount:increment(1),referralBonus:increment(50)});
+        await updateDoc(ref,{points:increment(50),totalMined:increment(50)});
+      }
+    }
+  } catch(e){ console.error("DB error:", e); }
+}
+
+// CEK AUTH - hanya redirect ke dashboard kalau sudah login
+// ── TELEGRAM AUTO LOGIN ───────────────────────────────────────────────────────
+const tg = window.Telegram?.WebApp;
+if(tg && tg.initDataUnsafe?.user){
+  // Dibuka dari Telegram Mini App
+  tg.ready();
+  tg.expand();
+  tg.setBackgroundColor("#0a0c0f");
+
+  const tgUser = tg.initDataUnsafe.user;
+  const tgUid = "tg_" + tgUser.id; // ID unik pakai prefix tg_
+  const tgName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || "Miner";
+  const tgEmail = tgUid + "@telegram.guppy"; // email virtual
+
+  // Cek ref dari start_param Telegram
+  const tgRef = tg.initDataUnsafe.start_param || sessionStorage.getItem("pendingRef") || "";
+
+  // Simpan data Telegram ke localStorage agar dashboard bisa baca
+  localStorage.setItem("tg_user", JSON.stringify({ uid: tgUid, name: tgName, tgId: tgUser.id, photo: tgUser.photo_url || "" }));
+
+  // Login atau daftar otomatis pakai Firebase Custom Token via email virtual
+  (async () => {
+    try{
+      // Coba login dulu
+      try{
+        await signInWithEmailAndPassword(auth, tgEmail, "tg_" + tgUser.id + "_guppy");
+        goToDashboard();
+        return;
+      } catch(e){ /* belum punya akun, lanjut daftar */ }
+
+      // Daftar akun baru
+      const cred = await createUserWithEmailAndPassword(auth, tgEmail, "tg_" + tgUser.id + "_guppy");
+      await updateProfile(cred.user, { displayName: tgName, photoURL: tgUser.photo_url || "" });
+      await saveUserToDB(cred.user, tgRef.toUpperCase());
+      goToDashboard();
+    } catch(e){
+      console.error("Telegram login error:", e);
+      // Kalau gagal, tampilkan form login biasa
+      showLoginPage();
+    }
+  })();
+} else {
+  // Bukan dari Telegram, cek auth biasa
+  onAuthStateChanged(auth, (user)=>{
+    if(authChecked) return;
+    authChecked = true;
+    if(user){ goToDashboard(); } else { showLoginPage(); }
+  });
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Cek ref code di URL
+const urlRef = new URLSearchParams(window.location.search).get("ref");
+if(urlRef){
+  sessionStorage.setItem("pendingRef", urlRef.toUpperCase());
+}
+
+window.switchTab = function(tab){
+  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".form").forEach(f=>f.classList.remove("active"));
+  document.getElementById("tab-"+tab).classList.add("active");
+  document.getElementById("form-"+tab).classList.add("active");
+  clearErr();
+};
+
+window.doLogin = async function(){
+  const email = document.getElementById("login-email").value.trim();
+  const pass = document.getElementById("login-password").value;
+  if(!email||!pass) return showErr("Isi email dan password dulu!");
+  showOverlay(); clearErr();
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+    goToDashboard();
+  } catch(e){
+    if(e.code==="auth/invalid-credential"||e.code==="auth/wrong-password") showErr("Email atau password salah!");
+    else if(e.code==="auth/user-not-found") showErr("Akun tidak ditemukan!");
+    else showErr(e.message);
+  }
+};
+
+window.doRegister = async function(){
+  const name = document.getElementById("reg-name").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
+  const pass = document.getElementById("reg-password").value;
+  const refCode = document.getElementById("reg-referral").value.trim().toUpperCase();
+  if(!name||!email||!pass) return showErr("Semua field wajib diisi!");
+  if(pass.length<6) return showErr("Password minimal 6 karakter!");
+  showOverlay(); clearErr();
+  try{
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, {displayName: name});
+    await saveUserToDB(cred.user, refCode);
+    goToDashboard();
+  } catch(e){
+    if(e.code==="auth/email-already-in-use") showErr("Email sudah terdaftar!");
+    else showErr(e.message);
+  }
+};
+
+// GOOGLE LOGIN - pakai popup saja (lebih stabil di semua browser)
+window.doGoogleLogin = async function(){
+  clearErr(); showOverlay();
+  try{
+    const result = await signInWithPopup(auth, gProvider);
+    const refCode = sessionStorage.getItem("pendingRef") || "";
+    sessionStorage.removeItem("pendingRef");
+    await saveUserToDB(result.user, refCode);
+    goToDashboard();
+  } catch(e){
+    hideOverlay();
+    if(e.code === "auth/popup-blocked"){
+      showErr("Popup diblokir browser! Coba matikan popup blocker atau gunakan email/password.");
+    } else if(e.code === "auth/cancelled-popup-request" || e.code === "auth/popup-closed-by-user"){
+      showErr("Login dibatalkan.");
+    } else {
+      showErr(e.message);
+    }
+  }
+};
+</script>
+</body>
+</html>
