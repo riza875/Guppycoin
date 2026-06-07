@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>BTcloude Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090d;--card:#0f1318;--card2:#141920;--card3:#1a2030;
+  --blue:#3b82f6;--og:rgba(59,130,246,.15);
+  --green:#22c55e;--gg:rgba(34,197,94,.12);
+  --orange:#f59e0b;--red:#ef4444;--purple:#a855f7;
+  --text:#f1f5f9;--muted:#64748b;--dim:#94a3b8;
+  --border:rgba(59,130,246,.15);--b2:rgba(255,255,255,.06)
+}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh}
+
+/* LOGIN */
+#login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{width:100%;max-width:380px;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:40px 32px;display:flex;flex-direction:column;gap:20px;animation:fadeIn .4s ease}
+.login-logo{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--blue);letter-spacing:3px;text-align:center}
+.login-logo span{color:var(--orange)}
+.login-sub{text-align:center;color:var(--muted);font-size:.82rem;letter-spacing:1px}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px;background:#fff;color:#1f2937;border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.btn-google:hover{background:#f3f4f6;box-shadow:0 0 24px rgba(255,255,255,.15)}
+.login-note{text-align:center;color:var(--muted);font-size:.75rem;line-height:1.6;padding:10px;background:rgba(59,130,246,.06);border:1px solid var(--border);border-radius:10px}
+.login-err{color:var(--red);font-size:.8rem;text-align:center;min-height:18px}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(7,9,13,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.header-logo{font-family:'Orbitron',sans-serif;font-size:.9rem;color:var(--blue);letter-spacing:2px;display:flex;align-items:center;gap:8px}
+.header-logo span{color:var(--orange)}
+.admin-badge{padding:3px 10px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:20px;color:var(--orange);font-size:.6rem;letter-spacing:2px}
+.btn-logout-h{padding:6px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:20px;color:var(--red);font-size:.72rem;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.btn-logout-h:hover{background:rgba(239,68,68,.2)}
+
+/* NOTIF BELL */
+.notif-btn{position:relative;width:36px;height:36px;background:var(--og);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.notif-btn:hover{border-color:var(--blue)}
+.notif-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;background:var(--red);border-radius:50%;border:2px solid var(--bg);display:none;animation:blink 1.5s infinite}
+.notif-dot.show{display:block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* NOTIF PANEL */
+.notif-panel{position:fixed;top:60px;right:16px;width:320px;background:var(--card);border:1px solid var(--border);border-radius:16px;z-index:200;display:none;flex-direction:column;animation:slideDown .2s ease;box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:420px;overflow:hidden}
+.notif-panel.show{display:flex}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.notif-header{padding:14px 16px;border-bottom:1px solid var(--b2);display:flex;align-items:center;justify-content:space-between}
+.notif-header h4{font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:2px;color:var(--blue)}
+.notif-clear{font-size:.72rem;color:var(--muted);cursor:pointer;background:none;border:none;color:var(--dim)}
+.notif-clear:hover{color:var(--red)}
+.notif-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:0}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--b2);display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:background .2s}
+.notif-item:hover{background:var(--card2)}
+.notif-item.unread{background:rgba(59,130,246,.06)}
+.notif-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.notif-content{flex:1}
+.notif-content strong{display:block;font-size:.82rem;color:var(--text);margin-bottom:2px}
+.notif-content small{font-size:.72rem;color:var(--muted)}
+.notif-time{font-size:.68rem;color:var(--muted);white-space:nowrap;margin-top:2px}
+.notif-empty{padding:20px;text-align:center;color:var(--muted);font-size:.82rem}
+
+/* CONTENT */
+.content{padding:16px 20px;display:flex;flex-direction:column;gap:16px;max-width:900px;margin:0 auto}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-card{background:var(--card);border:1px solid var(--b2);border-radius:16px;padding:18px 16px;display:flex;flex-direction:column;gap:6px;transition:border .2s}
+.stat-card:hover{border-color:var(--blue)}
+.stat-icon{font-size:1.5rem}
+.stat-val{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700}
+.stat-label{font-size:.72rem;color:var(--muted);letter-spacing:1px}
+.c-blue{color:var(--blue)} .c-green{color:var(--green)} .c-orange{color:var(--orange)} .c-purple{color:var(--purple)} .c-red{color:var(--red)}
+
+/* TABS */
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{padding:9px 18px;background:var(--card2);border:1.5px solid var(--b2);border-radius:20px;font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:1px;cursor:pointer;transition:all .2s;color:var(--dim)}
+.tab.active{background:var(--og);border-color:var(--blue);color:var(--blue)}
+.tab:hover:not(.active){border-color:var(--muted);color:var(--text)}
+
+/* SECTION */
+.section{display:none;flex-direction:column;gap:14px}
+.section.active{display:flex}
+.section-title{font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:2px;color:var(--blue);padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+/* SEARCH */
+.search-bar{padding:11px 16px;background:var(--card2);border:1.5px solid var(--b2);border-radius:12px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:.9rem;outline:none;transition:border .2s;width:100%}
+.search-bar:focus{border-color:var(--blue)}
+.search-bar::placeholder{color:var(--muted)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--b2)}
+table{width:100%;border-collapse:collapse;min-width:500px}
+thead{background:var(--card2)}
+th{padding:12px 14px;text-align:left;font-family:'Orbitron',sans-serif;font-size:.62rem;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--b2);white-space:nowrap}
+td{padding:12px 14px;font-size:.85rem;border-bottom:1px solid var(--b2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(59,130,246,.04)}
+.td-name{font-weight:700;color:var(--text)}
+.td-email{color:var(--dim);font-size:.78rem}
+.td-mono{font-family:'Orbitron',sans-serif;font-size:.72rem}
+
+/* BADGE */
+.badge{padding:4px 10px;border-radius:20px;font-size:.68rem;white-space:nowrap;font-family:'Orbitron',sans-serif;letter-spacing:1px}
+.badge-pending{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
+.badge-done,.badge-approved,.badge-active{background:var(--gg);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.badge-reject,.badge-rejected{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.badge-checking{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.badge-basic{background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)}
+.badge-silver{background:rgba(148,163,184,.15);color:#cbd5e1;border:1px solid rgba(148,163,184,.3)}
+.badge-gold{background:rgba(234,179,8,.12);color:#fbbf24;border:1px solid rgba(234,179,8,.3)}
+.badge-platinum{background:rgba(139,92,246,.12);color:#c4b5fd;border:1px solid rgba(139,92,246,.3)}
+.badge-diamond{background:rgba(59,130,246,.12);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
+
+/* ACTION BUTTONS */
+.btn-approve{padding:5px 12px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:var(--green);border-radius:8px;font-size:.72rem;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:700}
+.btn-approve:hover{background:rgba(34,197,94,.3)}
+.btn-reject{padding:5px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:8px;font-size:.72rem;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:700}
+.btn-reject:hover{background:rgba(239,68,68,.2)}
+.btn-view{padding:5px 12px;background:var(--og);border:1px solid var(--border);color:var(--blue);border-radius:8px;font-size:.72rem;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif}
+.action-btns{display:flex;gap:6px;flex-wrap:wrap}
+
+/* BROADCAST */
+.broadcast-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.broadcast-card h3{font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:2px;color:var(--orange)}
+.b-field{display:flex;flex-direction:column;gap:6px}
+.b-field label{font-size:.72rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.b-field input,.b-field textarea,.b-field select{padding:12px 16px;background:var(--card2);border:1.5px solid var(--b2);border-radius:11px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:.9rem;outline:none;transition:border .2s;resize:none}
+.b-field input:focus,.b-field textarea:focus,.b-field select:focus{border-color:var(--orange)}
+.b-field select option{background:var(--card2)}
+.btn-broadcast{padding:13px;background:var(--orange);color:#000;border:none;border-radius:12px;font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:2px;cursor:pointer;font-weight:700;transition:all .2s}
+.btn-broadcast:hover{background:#d97706;box-shadow:0 0 20px rgba(245,158,11,.3)}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:16px;animation:fadeIn .25s ease}
+.modal h3{font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:2px;color:var(--blue)}
+.modal-info{background:var(--card2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.modal-row{display:flex;justify-content:space-between;font-size:.85rem}
+.modal-row span:first-child{color:var(--muted)}
+.modal-row span:last-child{color:var(--text);font-weight:600;text-align:right;max-width:60%}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;padding:12px;border-radius:12px;font-family:'Orbitron',sans-serif;font-size:.7rem;letter-spacing:1px;cursor:pointer;font-weight:700;border:none;transition:all .2s}
+.btn-m-approve{background:var(--green);color:#000}
+.btn-m-approve:hover{background:#16a34a}
+.btn-m-reject{background:rgba(239,68,68,.15);color:var(--red);border:1.5px solid rgba(239,68,68,.4)!important;border:none}
+.btn-m-reject:hover{background:rgba(239,68,68,.25)}
+.btn-m-close{background:var(--b2);color:var(--dim)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 22px;font-size:.85rem;z-index:999;transition:transform .3s ease;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;color:var(--muted);font-size:.85rem}
+.spinner{width:20px;height:20px;border:2px solid var(--b2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* USER DETAIL */
+.user-detail-card{background:var(--card2);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+
+/* EMPTY */
+.empty{text-align:center;color:var(--muted);padding:24px;font-size:.85rem}
+
+/* ADMIN PAGE */
+#admin-page{display:none}
+#admin-page.show{display:block}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* NEW NOTIF FLASH */
+@keyframes flashBorder{0%,100%{border-color:var(--b2)}50%{border-color:var(--orange)}}
+.notif-flash{animation:flashBorder 1s ease 3}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">BT<span>cloude</span></div>
+    <div class="login-sub">🔐 ADMIN PANEL</div>
+    <div class="login-note">Hanya akun yang terdaftar sebagai admin yang bisa masuk.</div>
+    <button class="btn-google" onclick="doGoogleLogin()">
+      <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Masuk dengan Google
+    </button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div id="admin-page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-logo">BT<span>cloude</span> &nbsp;<div class="admin-badge">ADMIN</div></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <!-- Notif Bell -->
+      <div class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot" id="notif-dot"></div>
+      </div>
+      <button class="btn-logout-h" onclick="doLogout()">Keluar</button>
+    </div>
+  </div>
+
+  <!-- NOTIF PANEL -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-header">
+      <h4>🔔 NOTIFIKASI</h4>
+      <button class="notif-clear" onclick="clearAllNotif()">Hapus semua</button>
+    </div>
+    <div class="notif-list" id="notif-list">
+      <div class="notif-empty">Belum ada notifikasi</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-val c-blue" id="s-users">—</div>
+        <div class="stat-label">Total User</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-val c-orange" id="s-orders">—</div>
+        <div class="stat-label">Node Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💸</div>
+        <div class="stat-val c-green" id="s-wd-pending">—</div>
+        <div class="stat-label">Withdraw Pending</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-val c-purple" id="s-wd-done">—</div>
+        <div class="stat-label">Withdraw Selesai</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('users')">👥 User</div>
+      <div class="tab" onclick="switchTab('orders')">⚡ Node Orders</div>
+      <div class="tab" onclick="switchTab('withdrawals')">💸 Withdraw</div>
+      <div class="tab" onclick="switchTab('broadcast')">📢 Broadcast</div>
+    </div>
+
+    <!-- USERS -->
+    <div class="section active" id="sec-users">
+      <div class="section-title">📋 DAFTAR USER</div>
+      <input class="search-bar" id="user-search" placeholder="🔍 Cari nama atau email user..." oninput="filterUsers()"/>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>NAMA / EMAIL</th>
+              <th>NODE</th>
+              <th>BTC MINED</th>
+              <th>POIN</th>
+              <th>KYC</th>
+              <th>AKSI</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="6"><div class="loading"><div class="spinner"></div> Memuat...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- NODE ORDERS -->
+    <div class="section" id="sec-orders">
+      <div class="section-title">⚡ NODE UPGRADE ORDERS</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>USER</th>
+              <th>NODE</th>
+              <th>HARGA</th>
+              <th>NETWORK</th>
+              <th>STATUS</th>
+              <th>WAKTU</th>
+              <th>AKSI</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr><td colspan="7"><div class="loading"><div class="spinner"></div> Memuat...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- WITHDRAWALS -->
+    <div class="section" id="sec-withdrawals">
+      <div class="section-title">💸 WITHDRAW REQUEST</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>USER</th>
+              <th>JUMLAH</th>
+              <th>NETWORK</th>
+              <th>WALLET</th>
+              <th>STATUS</th>
+              <th>WAKTU</th>
+              <th>AKSI</th>
+            </tr>
+          </thead>
+          <tbody id="wd-tbody">
+            <tr><td colspan="7"><div class="loading"><div class="spinner"></div> Memuat...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="section" id="sec-broadcast">
+      <div class="section-title">📢 BROADCAST NOTIFIKASI</div>
+      <div class="broadcast-card">
+        <h3>📣 KIRIM NOTIFIKASI KE USER</h3>
+        <div class="b-field">
+          <label>Tipe Notifikasi</label>
+          <select id="bc-type">
+            <option value="info">ℹ️ Info</option>
+            <option value="success">✅ Sukses</option>
+            <option value="warning">⚠️ Peringatan</option>
+            <option value="promo">🎁 Promo</option>
+          </select>
+        </div>
+        <div class="b-field">
+          <label>Judul</label>
+          <input type="text" id="bc-title" placeholder="Contoh: Maintenance Terjadwal" maxlength="60"/>
+        </div>
+        <div class="b-field">
+          <label>Pesan</label>
+          <textarea id="bc-msg" rows="3" placeholder="Tulis pesan untuk semua user..." maxlength="200"></textarea>
+        </div>
+        <div class="b-field">
+          <label>Target</label>
+          <select id="bc-target">
+            <option value="all">Semua User</option>
+            <option value="kyc">Hanya User Terverifikasi KYC</option>
+          </select>
+        </div>
+        <button class="btn-broadcast" onclick="sendBroadcast()">📢 KIRIM BROADCAST</button>
+      </div>
+
+      <!-- Broadcast history -->
+      <div class="section-title" style="margin-top:4px">📜 RIWAYAT BROADCAST</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>JUDUL</th><th>PESAN</th><th>TARGET</th><th>WAKTU</th></tr>
+          </thead>
+          <tbody id="bc-tbody">
+            <tr><td colspan="4"><div class="loading"><div class="spinner"></div> Memuat...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /admin-page -->
+
+<!-- MODAL USER DETAIL -->
+<div class="modal-bg" id="modal-user">
+  <div class="modal">
+    <h3>👤 DETAIL USER</h3>
+    <div class="modal-info" id="modal-user-info"></div>
+    <div class="modal-btns">
+      <button class="btn-m-close" onclick="closeModal('modal-user')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ORDER ACTION -->
+<div class="modal-bg" id="modal-order">
+  <div class="modal">
+    <h3 id="modal-order-title">⚡ NODE ORDER</h3>
+    <div class="modal-info" id="modal-order-info"></div>
+    <div class="modal-btns" id="modal-order-btns"></div>
+  </div>
+</div>
+
+<!-- MODAL WITHDRAW ACTION -->
+<div class="modal-bg" id="modal-wd">
+  <div class="modal">
+    <h3 id="modal-wd-title">💸 WITHDRAW REQUEST</h3>
+    <div class="modal-info" id="modal-wd-info"></div>
+    <div class="modal-btns" id="modal-wd-btns"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, getDocs, getDoc, updateDoc,
+  addDoc, query, orderBy, where, onSnapshot, serverTimestamp, limit
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCObu2ErcXlHD0SKJ3BU_Iiw3Dm4hI2FV8",
+  authDomain: "guppycoin-58f91.firebaseapp.com",
+  projectId: "guppycoin-58f91",
+  storageBucket: "guppycoin-58f91.firebasestorage.app",
+  messagingSenderId: "374633980019",
+  appId: "1:374633980019:web:d23e33eebe19a324de0a06"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── ADMIN WHITELIST ──
+const ADMIN_EMAILS = ["esamarifin11@gmail.com"];
+
+// ── STATE ──
+let allUsers = [];
+let allOrders = [];
+let allWds = [];
+let notifications = JSON.parse(localStorage.getItem("btc_admin_notifs") || "[]");
+let unreadCount = notifications.filter(n => !n.read).length;
+
+// ── AUTH ──
+onAuthStateChanged(auth, user => {
+  if(user && ADMIN_EMAILS.includes(user.email)){
+    document.getElementById("login-page").style.display = "none";
+    document.getElementById("admin-page").classList.add("show");
+    initAdmin();
+  } else if(user){
+    // Login tapi bukan admin
+    signOut(auth);
+    document.getElementById("login-err").textContent = "❌ Akun ini tidak punya akses admin.";
+  } else {
+    document.getElementById("login-page").style.display = "flex";
+    document.getElementById("admin-page").classList.remove("show");
+  }
+});
+
+window.doGoogleLogin = async function(){
+  const err = document.getElementById("login-err");
+  err.textContent = "";
+  try{
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ login_hint: "esamarifin11@gmail.com" });
+    await signInWithPopup(auth, provider);
+  } catch(e){
+    if(e.code !== "auth/popup-closed-by-user"){
+      err.textContent = "❌ Gagal login: " + e.message;
+    }
+  }
+};
+
+window.doLogout = async function(){
+  await signOut(auth);
+};
+
+// ── INIT ──
+async function initAdmin(){
+  updateNotifBadge();
+  renderNotifPanel();
+  await Promise.all([loadUsers(), loadOrders(), loadWithdrawals()]);
+  loadBroadcastHistory();
+  startRealtimeListeners();
+}
+
+// ── TABS ──
+window.switchTab = function(tab){
+  document.querySelectorAll(".tab").forEach((t,i) => {
+    const tabs = ["users","orders","withdrawals","broadcast"];
+    t.classList.toggle("active", tabs[i] === tab);
+  });
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById("sec-"+tab).classList.add("active");
+  if(tab==="broadcast") loadBroadcastHistory();
+};
+
+// ── LOAD USERS ──
+async function loadUsers(){
+  try{
+    const snap = await getDocs(collection(db,"users"));
+    allUsers = [];
+    snap.forEach(d => allUsers.push({id:d.id,...d.data()}));
+    renderUsers(allUsers);
+    document.getElementById("s-users").textContent = allUsers.length;
+  }catch(e){ console.error(e); }
+}
+
+function renderUsers(list){
+  const tb = document.getElementById("users-tbody");
+  if(!list.length){ tb.innerHTML='<tr><td colspan="6"><div class="empty">Tidak ada user</div></td></tr>'; return; }
+  tb.innerHTML = list.map(u => `
+    <tr>
+      <td>
+        <div class="td-name">${esc(u.name||"—")}</div>
+        <div class="td-email">${esc(u.email||"—")}</div>
+      </td>
+      <td><span class="badge badge-${nodeClass(u.nodeLevel||1)}">${nodeName(u.nodeLevel||1)}</span></td>
+      <td class="td-mono">${(u.btcMined||0).toFixed(8)}</td>
+      <td class="td-mono c-orange">${(u.points||0).toLocaleString()}</td>
+      <td>${u.kyc==="verified"?'<span class="badge badge-done">✓ KYC</span>':'<span class="badge badge-pending">Belum</span>'}</td>
+      <td><button class="btn-view" onclick="viewUser('${u.id}')">Detail</button></td>
+    </tr>
+  `).join("");
+}
+
+window.filterUsers = function(){
+  const q = document.getElementById("user-search").value.toLowerCase();
+  const filtered = allUsers.filter(u =>
+    (u.name||"").toLowerCase().includes(q) || (u.email||"").toLowerCase().includes(q)
+  );
+  renderUsers(filtered);
+};
+
+window.viewUser = function(uid){
+  const u = allUsers.find(x => x.id === uid);
+  if(!u) return;
+  document.getElementById("modal-user-info").innerHTML = `
+    <div class="modal-row"><span>Nama</span><span>${esc(u.name||"—")}</span></div>
+    <div class="modal-row"><span>Email</span><span>${esc(u.email||"—")}</span></div>
+    <div class="modal-row"><span>UID</span><span style="font-size:.7rem">${uid}</span></div>
+    <div class="modal-row"><span>Node Level</span><span>${nodeName(u.nodeLevel||1)}</span></div>
+    <div class="modal-row"><span>BTC Mined</span><span>${(u.btcMined||0).toFixed(8)} BTC</span></div>
+    <div class="modal-row"><span>Total Withdraw</span><span>${(u.totalWithdraw||0).toFixed(8)} BTC</span></div>
+    <div class="modal-row"><span>Poin</span><span>${(u.points||0).toLocaleString()}</span></div>
+    <div class="modal-row"><span>Referral Code</span><span>${u.referralCode||"—"}</span></div>
+    <div class="modal-row"><span>KYC</span><span>${u.kyc==="verified"?"✅ Terverifikasi":"❌ Belum"}</span></div>
+    <div class="modal-row"><span>Bergabung</span><span>${fmtDate(u.joinedAt)}</span></div>
+  `;
+  openModal("modal-user");
+};
+
+// ── LOAD ORDERS ──
+async function loadOrders(){
+  try{
+    const snap = await getDocs(query(collection(db,"node_orders"), orderBy("createdAt","desc")));
+    allOrders = [];
+    snap.forEach(d => allOrders.push({id:d.id,...d.data()}));
+    renderOrders();
+    document.getElementById("s-orders").textContent = allOrders.length;
+  }catch(e){ console.error(e); }
+}
+
+function renderOrders(){
+  const tb = document.getElementById("orders-tbody");
+  if(!allOrders.length){ tb.innerHTML='<tr><td colspan="7"><div class="empty">Belum ada order</div></td></tr>'; return; }
+  tb.innerHTML = allOrders.map(o => `
+    <tr>
+      <td>
+        <div class="td-name">${esc(o.name||"—")}</div>
+        <div class="td-email">${esc(o.email||"—")}</div>
+      </td>
+      <td><span class="badge badge-${nodeClass(o.nodeLevel||1)}">${esc(o.nodeName||"—")}</span></td>
+      <td class="td-mono c-orange">$${o.priceUSDT||0} USDT</td>
+      <td style="font-size:.75rem;color:var(--dim)">${esc(o.network||"—")}</td>
+      <td><span class="badge badge-${o.status||"pending"}">${o.status||"pending"}</span></td>
+      <td style="font-size:.75rem;color:var(--muted)">${fmtDate(o.createdAt)}</td>
+      <td>
+        <div class="action-btns">
+          ${o.status==="checking"||o.status==="pending" ? `
+            <button class="btn-approve" onclick="actionOrder('${o.id}','approve')">✓ Approve</button>
+            <button class="btn-reject" onclick="actionOrder('${o.id}','reject')">✗ Tolak</button>
+          ` : `<span style="color:var(--muted);font-size:.75rem">${o.status}</span>`}
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+window.actionOrder = function(orderId, action){
+  const o = allOrders.find(x => x.id === orderId);
+  if(!o) return;
+  const isApprove = action === "approve";
+
+  document.getElementById("modal-order-title").textContent = isApprove ? "✅ Approve Node Order" : "❌ Tolak Node Order";
+  document.getElementById("modal-order-info").innerHTML = `
+    <div class="modal-row"><span>User</span><span>${esc(o.name||"—")}</span></div>
+    <div class="modal-row"><span>Email</span><span>${esc(o.email||"—")}</span></div>
+    <div class="modal-row"><span>Node</span><span>${esc(o.nodeName||"—")}</span></div>
+    <div class="modal-row"><span>Harga</span><span>$${o.priceUSDT||0} USDT</span></div>
+    <div class="modal-row"><span>Status</span><span>${o.status||"—"}</span></div>
+  `;
+  document.getElementById("modal-order-btns").innerHTML = `
+    <button class="btn-m-close" onclick="closeModal('modal-order')">Batal</button>
+    <button class="${isApprove?'btn-m-approve':'btn-m-reject'}" onclick="confirmOrderAction('${orderId}','${action}')">
+      ${isApprove ? "✅ Approve & Aktifkan" : "❌ Tolak Order"}
+    </button>
+  `;
+  openModal("modal-order");
+};
+
+window.confirmOrderAction = async function(orderId, action){
+  const o = allOrders.find(x => x.id === orderId);
+  if(!o) return;
+  closeModal("modal-order");
+  try{
+    const newStatus = action==="approve" ? "approved" : "rejected";
+    await updateDoc(doc(db,"node_orders",orderId), { status: newStatus });
+
+    if(action === "approve"){
+      // Aktifkan node level di user
+      await updateDoc(doc(db,"users",o.uid), { nodeLevel: o.nodeLevel });
+      // Kirim notif ke user via Firestore
+      await addDoc(collection(db,"notifications"), {
+        uid: o.uid,
+        type: "node_approved",
+        title: "🎉 Node Upgrade Disetujui!",
+        message: `${o.nodeName} Node kamu sudah aktif! Mining ${getMultiplier(o.nodeLevel)}x lebih cepat.`,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+      showToast("✅ Node diapprove & diaktifkan!");
+    } else {
+      await addDoc(collection(db,"notifications"), {
+        uid: o.uid,
+        type: "node_rejected",
+        title: "❌ Node Upgrade Ditolak",
+        message: `Permintaan upgrade ${o.nodeName} Node ditolak. Hubungi admin untuk info lebih lanjut.`,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+      showToast("❌ Order ditolak.");
+    }
+    await loadOrders();
+  }catch(e){ showToast("Error: "+e.message); }
+};
+
+// ── LOAD WITHDRAWALS ──
+async function loadWithdrawals(){
+  try{
+    const snap = await getDocs(query(collection(db,"withdrawals"), orderBy("createdAt","desc")));
+    allWds = [];
+    snap.forEach(d => allWds.push({id:d.id,...d.data()}));
+    renderWithdrawals();
+    const pending = allWds.filter(w => w.status==="pending").length;
+    const done = allWds.filter(w => w.status==="approved"||w.status==="done").length;
+    document.getElementById("s-wd-pending").textContent = pending;
+    document.getElementById("s-wd-done").textContent = done;
+  }catch(e){ console.error(e); }
+}
+
+function renderWithdrawals(){
+  const tb = document.getElementById("wd-tbody");
+  if(!allWds.length){ tb.innerHTML='<tr><td colspan="7"><div class="empty">Belum ada withdraw</div></td></tr>'; return; }
+  tb.innerHTML = allWds.map(w => `
+    <tr>
+      <td>
+        <div class="td-name">${esc(w.name||"—")}</div>
+        <div class="td-email">${esc(w.email||"—")}</div>
+      </td>
+      <td class="td-mono c-green">${(w.amount||0).toFixed(8)} BTC</td>
+      <td style="font-size:.75rem;color:var(--dim)">${esc(w.network||"—")}</td>
+      <td style="font-size:.72rem;word-break:break-all;max-width:140px">
+        <div>${esc(w.walletAddress||"—")}</div>
+        <div style="color:var(--muted)">${esc(w.walletName||"")}</div>
+      </td>
+      <td><span class="badge badge-${w.status||"pending"}">${w.status||"pending"}</span></td>
+      <td style="font-size:.75rem;color:var(--muted)">${fmtDate(w.createdAt)}</td>
+      <td>
+        <div class="action-btns">
+          ${w.status==="pending" ? `
+            <button class="btn-approve" onclick="actionWd('${w.id}','approve')">✓ Proses</button>
+            <button class="btn-reject" onclick="actionWd('${w.id}','reject')">✗ Tolak</button>
+          ` : `<span style="color:var(--muted);font-size:.75rem">${w.status}</span>`}
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+window.actionWd = function(wdId, action){
+  const w = allWds.find(x => x.id === wdId);
+  if(!w) return;
+  const isApprove = action === "approve";
+  document.getElementById("modal-wd-title").textContent = isApprove ? "✅ Proses Withdraw" : "❌ Tolak Withdraw";
+  document.getElementById("modal-wd-info").innerHTML = `
+    <div class="modal-row"><span>User</span><span>${esc(w.name||"—")}</span></div>
+    <div class="modal-row"><span>Email</span><span>${esc(w.email||"—")}</span></div>
+    <div class="modal-row"><span>Jumlah</span><span>${(w.amount||0).toFixed(8)} BTC</span></div>
+    <div class="modal-row"><span>Network</span><span>${esc(w.network||"—")}</span></div>
+    <div class="modal-row"><span>Wallet</span><span style="font-size:.72rem;word-break:break-all">${esc(w.walletAddress||"—")}</span></div>
+    <div class="modal-row"><span>Nama</span><span>${esc(w.walletName||"—")}</span></div>
+  `;
+  document.getElementById("modal-wd-btns").innerHTML = `
+    <button class="btn-m-close" onclick="closeModal('modal-wd')">Batal</button>
+    <button class="${isApprove?'btn-m-approve':'btn-m-reject'}" onclick="confirmWdAction('${wdId}','${action}')">
+      ${isApprove ? "✅ Approve Withdraw" : "❌ Tolak Withdraw"}
+    </button>
+  `;
+  openModal("modal-wd");
+};
+
+window.confirmWdAction = async function(wdId, action){
+  const w = allWds.find(x => x.id === wdId);
+  if(!w) return;
+  closeModal("modal-wd");
+  try{
+    const newStatus = action==="approve" ? "approved" : "rejected";
+    await updateDoc(doc(db,"withdrawals",wdId), { status: newStatus });
+
+    // Notif ke user
+    await addDoc(collection(db,"notifications"), {
+      uid: w.uid,
+      type: action==="approve" ? "withdraw_approved" : "withdraw_rejected",
+      title: action==="approve" ? "💰 Withdraw Disetujui!" : "❌ Withdraw Ditolak",
+      message: action==="approve"
+        ? `Withdraw ${(w.amount||0).toFixed(8)} BTC via ${w.network} sedang diproses.`
+        : `Withdraw ${(w.amount||0).toFixed(8)} BTC ditolak. Hubungi admin untuk info lebih lanjut.`,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+
+    showToast(action==="approve" ? "✅ Withdraw diapprove!" : "❌ Withdraw ditolak.");
+    await loadWithdrawals();
+  }catch(e){ showToast("Error: "+e.message); }
+};
+
+// ── BROADCAST ──
+window.sendBroadcast = async function(){
+  const type = document.getElementById("bc-type").value;
+  const title = document.getElementById("bc-title").value.trim();
+  const msg = document.getElementById("bc-msg").value.trim();
+  const target = document.getElementById("bc-target").value;
+  if(!title || !msg){ showToast("❌ Isi judul dan pesan"); return; }
+  try{
+    let targets = allUsers;
+    if(target === "kyc") targets = allUsers.filter(u => u.kyc === "verified");
+    const icon = {info:"ℹ️",success:"✅",warning:"⚠️",promo:"🎁"}[type] || "📢";
+
+    // Kirim ke semua user target
+    const batch = targets.map(u =>
+      addDoc(collection(db,"notifications"),{
+        uid: u.id,
+        type: "broadcast",
+        title: icon+" "+title,
+        message: msg,
+        read: false,
+        createdAt: serverTimestamp()
+      })
+    );
+    await Promise.all(batch);
+
+    // Simpan ke broadcast_logs
+    await addDoc(collection(db,"broadcast_logs"),{
+      type, title: icon+" "+title, message: msg,
+      target, targetCount: targets.length,
+      sentAt: serverTimestamp()
+    });
+
+    document.getElementById("bc-title").value = "";
+    document.getElementById("bc-msg").value = "";
+    showToast(`✅ Broadcast dikirim ke ${targets.length} user!`);
+    loadBroadcastHistory();
+  }catch(e){ showToast("Error: "+e.message); }
+};
+
+async function loadBroadcastHistory(){
+  try{
+    const snap = await getDocs(query(collection(db,"broadcast_logs"), orderBy("sentAt","desc"), limit(20)));
+    const tb = document.getElementById("bc-tbody");
+    const rows = [];
+    snap.forEach(d => rows.push(d.data()));
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="4"><div class="empty">Belum ada broadcast</div></td></tr>'; return; }
+    tb.innerHTML = rows.map(r => `
+      <tr>
+        <td class="td-name">${esc(r.title||"—")}</td>
+        <td style="font-size:.8rem;color:var(--dim)">${esc(r.message||"—")}</td>
+        <td style="font-size:.75rem">${r.target==="all"?"Semua User":"KYC Only"} <span style="color:var(--muted)">(${r.targetCount||0})</span></td>
+        <td style="font-size:.75rem;color:var(--muted)">${fmtDate(r.sentAt)}</td>
+      </tr>
+    `).join("");
+  }catch(e){}
+}
+
+// ── REALTIME LISTENERS (notifikasi baru) ──
+function startRealtimeListeners(){
+  // Listen node_orders baru
+  const ordersQ = query(collection(db,"node_orders"), orderBy("createdAt","desc"), limit(1));
+  onSnapshot(ordersQ, snap => {
+    snap.docChanges().forEach(change => {
+      if(change.type === "added"){
+        const o = change.doc.data();
+        // Hanya notif kalau baru (dalam 30 detik terakhir)
+        const ts = o.createdAt?.toMillis?.() || 0;
+        if(Date.now() - ts < 30000){
+          addNotif({
+            icon:"⚡",
+            title:"Node Order Masuk!",
+            msg:`${o.name||"User"} minta upgrade ke ${o.nodeName||"Node"} ($${o.priceUSDT||0} USDT)`,
+            time: new Date().toLocaleTimeString("id-ID")
+          });
+          loadOrders();
+        }
+      }
+    });
+  });
+
+  // Listen withdrawals baru
+  const wdQ = query(collection(db,"withdrawals"), orderBy("createdAt","desc"), limit(1));
+  onSnapshot(wdQ, snap => {
+    snap.docChanges().forEach(change => {
+      if(change.type === "added"){
+        const w = change.doc.data();
+        const ts = w.createdAt?.toMillis?.() || 0;
+        if(Date.now() - ts < 30000){
+          addNotif({
+            icon:"💸",
+            title:"Withdraw Request!",
+            msg:`${w.name||"User"} minta withdraw ${(w.amount||0).toFixed(8)} BTC via ${w.network||"—"}`,
+            time: new Date().toLocaleTimeString("id-ID")
+          });
+          loadWithdrawals();
+        }
+      }
+    });
+  });
+}
+
+// ── NOTIFICATIONS ──
+function addNotif(notif){
+  notifications.unshift({...notif, read:false, id: Date.now()});
+  if(notifications.length > 50) notifications = notifications.slice(0,50);
+  saveNotifs();
+  unreadCount++;
+  updateNotifBadge();
+  renderNotifPanel();
+  // Flash notif button
+  document.getElementById("notif-btn").classList.add("notif-flash");
+  setTimeout(() => document.getElementById("notif-btn").classList.remove("notif-flash"), 3100);
+}
+
+function saveNotifs(){
+  localStorage.setItem("btc_admin_notifs", JSON.stringify(notifications));
+}
+
+function updateNotifBadge(){
+  const dot = document.getElementById("notif-dot");
+  dot.classList.toggle("show", unreadCount > 0);
+}
+
+function renderNotifPanel(){
+  const list = document.getElementById("notif-list");
+  if(!notifications.length){
+    list.innerHTML = '<div class="notif-empty">🔔 Belum ada notifikasi</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item ${n.read?'':'unread'}" onclick="markRead(${n.id})">
+      <div class="notif-icon">${n.icon||"🔔"}</div>
+      <div class="notif-content">
+        <strong>${esc(n.title||"")}</strong>
+        <small>${esc(n.msg||"")}</small>
+      </div>
+      <div class="notif-time">${n.time||""}</div>
+    </div>
+  `).join("");
+}
+
+window.markRead = function(id){
+  notifications = notifications.map(n => n.id===id ? {...n,read:true} : n);
+  unreadCount = notifications.filter(n => !n.read).length;
+  saveNotifs();
+  updateNotifBadge();
+  renderNotifPanel();
+};
+
+window.toggleNotifPanel = function(){
+  const panel = document.getElementById("notif-panel");
+  panel.classList.toggle("show");
+  if(panel.classList.contains("show")){
+    // Mark all read
+    notifications = notifications.map(n => ({...n,read:true}));
+    unreadCount = 0;
+    saveNotifs();
+    updateNotifBadge();
+    renderNotifPanel();
+  }
+};
+
+window.clearAllNotif = function(){
+  notifications = [];
+  unreadCount = 0;
+  saveNotifs();
+  updateNotifBadge();
+  renderNotifPanel();
+};
+
+// Close notif panel on outside click
+document.addEventListener("click", e => {
+  const panel = document.getElementById("notif-panel");
+  const btn = document.getElementById("notif-btn");
+  if(!panel.contains(e.target) && !btn.contains(e.target)){
+    panel.classList.remove("show");
+  }
+});
+
+// ── MODAL ──
+window.openModal = function(id){ document.getElementById(id).classList.add("show"); };
+window.closeModal = function(id){ document.getElementById(id).classList.remove("show"); };
+
+// ── HELPERS ──
+function esc(str){ return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function fmtDate(ts){
+  if(!ts) return "—";
+  try{
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}) + " " + d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+  }catch{return "—";}
+}
+
+function nodeName(level){
+  return {1:"Basic",2:"Silver",3:"Gold",4:"Platinum",5:"Diamond"}[level] || "Basic";
+}
+function nodeClass(level){
+  return {1:"basic",2:"silver",3:"gold",4:"platinum",5:"diamond"}[level] || "basic";
+}
+function getMultiplier(level){
+  return {1:1,2:2,3:4,4:8,5:16}[level] || 1;
+}
+
+// ── TOAST ──
+window.showToast = function(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+};
+</script>
+</body>
+</html>
